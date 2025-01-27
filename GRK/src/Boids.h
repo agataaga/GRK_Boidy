@@ -12,6 +12,8 @@ public:
     glm::vec3 velocity;
     glm::vec3 acceleration;
 
+    glm::vec3 color;
+
     // boid configuration
     float maxSpeed;
     float maxForce;
@@ -19,8 +21,10 @@ public:
 
     float perceptionRadius;
 
+    int groupID;
+
     // constructor
-    Boid(glm::vec3 startPosition, glm::vec3 startVelocity);
+    Boid(glm::vec3 startPosition, glm::vec3 startVelocity, int groupID, glm::vec3 color);
 
     // update the boid's position and velocity
     void update(const std::vector<Boid>& boids);

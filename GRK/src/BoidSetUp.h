@@ -8,5 +8,5 @@
 
 void setupPyramid();
 void renderBoids(std::vector<Boid>& boids, Shader& shaderProgram);
-
+void setUpBoids(std::vector<Boid>& boids, int numGroups, int numBoidsPerGroup);
 #endif

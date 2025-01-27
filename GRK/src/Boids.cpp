@@ -2,16 +2,24 @@
 
 
 // tutaj mozna cos zdynamizowac, idk dac uzytkownikowi moc zmieniania maxSpeed boidow?
-Boid::Boid(glm::vec3 startPosition, glm::vec3 startVelocity)
-    : position(startPosition), velocity(startVelocity), acceleration(glm::vec3(0.0f)),
-    maxSpeed(0.2f), maxForce(1.0f), angle(0.0f), perceptionRadius(1.5f) {}
+Boid::Boid(glm::vec3 startPosition, glm::vec3 startVelocity, int groupID, glm::vec3 color)
+    : position(startPosition),
+    velocity(startVelocity),
+    acceleration(glm::vec3(0.0f)),
+    maxSpeed(0.1f),
+    maxForce(0.4f),
+    angle(0.0f),
+    perceptionRadius(1.5f),
+    groupID(groupID),
+    color(color)
+{}
 
 void Boid::update(const std::vector<Boid>& boids) {
 
     // Define weights for the behaviors
-    float alignWeight = 1.0f;
+    float alignWeight = 0.5f; //zmniejszone sprawia ze ryby w malych stadach tak dziko nie wibruj¹
     float cohesionWeight = 0.01f;
-    float separationWeight = 10.0f;
+    float separationWeight = 3.0f;
 
     glm::vec3 alignForce = alignment(boids, perceptionRadius) * alignWeight;
     glm::vec3 cohesionForce = cohesion(boids, perceptionRadius) * cohesionWeight;
@@ -94,11 +102,14 @@ glm::vec3 Boid::alignment(const std::vector<Boid>& boids, float neighborDist) {
     int total = 0;             // number of neighbors
 
     for (const Boid& other : boids) {
-        float distance = glm::distance(position, other.position);
-        if (&other != this && distance < neighborDist) { // Check if within perception radius
-            steering += other.velocity; // Add neighbor's velocity
-            total++;
+        if (other.groupID == groupID) {
+            float distance = glm::distance(position, other.position);
+            if (&other != this && distance < neighborDist) { // Check if within perception radius
+                steering += other.velocity; // Add neighbor's velocity
+                total++;
+            }
         }
+        
     }
 
     if (total > 0) {
@@ -118,12 +129,14 @@ glm::vec3 Boid::cohesion(const std::vector<Boid>& boids, float neighborDist) {
     int total = 0;               // count of neighbors
 
     for (const Boid& other : boids) {
-        float distance = glm::distance(position, other.position); //distance between 2 boys
+        if (other.groupID == groupID) {
+            float distance = glm::distance(position, other.position); //distance between 2 boys
 
-        // if boys are close to each other, sum up their position and their total
-        if (&other != this && distance < neighborDist) {
-            centerOfMass += other.position;
-            total++;
+            // if boys are close to each other, sum up their position and their total
+            if (&other != this && distance < neighborDist) {
+                centerOfMass += other.position;
+                total++;
+            }
         }
     }
 
@@ -155,12 +168,14 @@ glm::vec3 Boid::separation(const std::vector<Boid>& boids, float desiredSeparati
     int total = 0;
 
     for (const Boid& other : boids) {
-        float distance = glm::distance(position, other.position);
-        if (&other != this && distance < desiredSeparation) {
-            glm::vec3 diff = position - other.position;
-            diff = glm::normalize(diff) / distance; // weight by distance (closer = stronger force)
-            steer += diff;
-            total++;
+        if (other.groupID == groupID) {
+            float distance = glm::distance(position, other.position);
+            if (&other != this && distance < desiredSeparation) {
+                glm::vec3 diff = position - other.position;
+                diff = glm::normalize(diff) / distance; // weight by distance (closer = stronger force)
+                steer += diff;
+                total++;
+            }
         }
     }
 

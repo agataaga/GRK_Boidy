@@ -72,25 +72,6 @@ void processInput(GLFWwindow* window) {
         glfwSetWindowShouldClose(window, true);
 }
 
-std::vector<Boid> boids;
-void setUpBoids() {
-    float spawnRange = 10.0f; // this controlls the size of the spawning box
-
-    for (int i = 0; i < 250; ++i) { // set the num of wanted boys here
-        glm::vec3 startPosition(
-            static_cast<float>(rand() % 200 - 100) / 10.0f * spawnRange / 10.0f, // random x
-            static_cast<float>(rand() % 200 - 100) / 10.0f * spawnRange / 10.0f, // random y
-            static_cast<float>(rand() % 200 - 100) / 10.0f * spawnRange / 10.0f  // random z
-        );
-        glm::vec3 startVelocity(
-            static_cast<float>(rand() % 10 - 5) / 10.0f,  // random x velocity
-            static_cast<float>(rand() % 10 - 5) / 10.0f,  // random y velocity
-            static_cast<float>(rand() % 10 - 5) / 10.0f   // random z velocity
-        );
-        boids.emplace_back(startPosition, startVelocity);
-    }
-}
-
 int main() {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -126,24 +107,26 @@ int main() {
     boxVAO.LinkAttrib(boxVBO, 1, 3, GL_FLOAT, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     //normals - for light
     boxVAO.LinkAttrib(boxVBO, 2, 2, GL_FLOAT, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-
     boxVAO.Unbind();
     boxVBO.Unbind();
     boxEBO.Unbind();
- 
     shaderProgram.Activate();
+
+    Shader fishShader("fish.vert", "fish.frag");
+    fishShader.Activate();
 
     //set up a pyramid shaped vao, so it represents our boids
     setupPyramid();
-
+    
     // matrixes for the camera
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -30.0f)); // sets how far away we are from the cube
     glEnable(GL_DEPTH_TEST);
-    // initialize cam
     Camera camera(width, height, glm::vec3(0.0f, 0.0f, 5.0f));
-
-    setUpBoids();
+    
+    // !!!!!!!!!!!!!!!!!!!!!!!!!
+    std::vector<Boid> boids; 
+    setUpBoids(boids, 5, 80); // set up num of boid groups you want here : boids, num of groups, num of boids in each group
 
     while (!glfwWindowShouldClose(window)) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -156,15 +139,22 @@ int main() {
         processInput(window);
         camera.Inputs(window);
         camera.updateMatrix(45.0f, 0.1f, 100.0f);
+        
         glUniform3f(glGetUniformLocation(shaderProgram.ID, "cameraPos"), camera.Position.x, camera.Position.y, camera.Position.z);
+        glUniform3f(glGetUniformLocation(fishShader.ID, "cameraPos"), camera.Position.x, camera.Position.y, camera.Position.z);
 
         shaderProgram.Activate();
+        fishShader.Activate();
+        
         camera.Matrix(shaderProgram, "camMatrix");
+        camera.Matrix(fishShader, "camMatrix");
 
-        shaderProgram.Activate();
         GLuint modelLoc = glGetUniformLocation(shaderProgram.ID, "model");
+        modelLoc = glGetUniformLocation(fishShader.ID, "model");
+
         GLuint viewLoc = glGetUniformLocation(shaderProgram.ID, "view");
-        glm::mat4 translateMatrix, rotateXMatrix, rotateYMatrix, rotateZMatrix, scaleMatrix;
+        viewLoc = glGetUniformLocation(fishShader.ID, "view");
+
         glm::mat4 identityMatrix = glm::mat4(1.0f);
         model = glm::scale(identityMatrix, glm::vec3(100.0f, 100.0f, 100.0f));
 
@@ -173,21 +163,19 @@ int main() {
         
         boxVAO.Bind();
         //draws wire cube for the boids to fly in
+        glUniform3fv(glGetUniformLocation(shaderProgram.ID, "color"), 1, glm::value_ptr(glm::vec3(1.0f, 1.0f, 1.0f)));
         glDrawElements(GL_LINES, sizeof(boxIndices)/ sizeof(int), GL_UNSIGNED_INT, 0);
         
- 
-        for (auto& boid : boids) {
-            boid.update(boids); // update position and velocity
-        }
 
-        // then we render them in their place
-        renderBoids(boids, shaderProgram);
+        // boid rendering and updating
+        for (auto& boid : boids) {
+            boid.update(boids); 
+        }
+        renderBoids(boids, fishShader);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
- 
 
     glfwDestroyWindow(window);
     glfwTerminate();

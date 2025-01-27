@@ -33,6 +33,8 @@
     <None Include="..\shaders\shader_2_1.vert" />
     <None Include="cube.frag" />
     <None Include="cube.vert" />
+    <None Include="fish.frag" />
+    <None Include="fish.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="include\glad.c" />

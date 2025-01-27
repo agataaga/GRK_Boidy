@@ -60,20 +60,62 @@ void renderBoids(std::vector<Boid>& boids, Shader& shaderProgram) {
     for (Boid& boid : boids) {
         glm::mat4 model = glm::mat4(1.0f);
 
-        /*std::cout << "Boid Position: ("
-            << boid.position.x << ", "
-            << boid.position.y << ", "
-            << boid.position.z << ")" << std::endl;*/
-
-            // Apply position and direction
         model = glm::translate(model, boid.position);
         model = glm::rotate(model, glm::radians(boid.angle), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.5f)); // Scale for better visibility
+        model = glm::scale(model, glm::vec3(0.5f));
 
         shaderProgram.Activate();
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
+        // Pass the group color to the shader
+        glUniform3fv(glGetUniformLocation(shaderProgram.ID, "groupColor"), 1, glm::value_ptr(boid.color));
+
         glBindVertexArray(pVAO);
         glDrawElements(GL_TRIANGLES, sizeof(pyramidIndices) / sizeof(int), GL_UNSIGNED_INT, 0);
+    }
+}
+
+
+void setUpBoids(std::vector<Boid>& boids, int numGroups, int numBoidsPerGroup) {
+    float spawnRange = 10.0f;
+
+    std::vector<glm::vec3> groupColors = {
+    glm::vec3(1.0f, 0.0f, 0.0f), // Red
+    glm::vec3(0.0f, 1.0f, 0.0f), // Green
+    glm::vec3(0.0f, 0.0f, 1.0f), // Blue
+    glm::vec3(1.0f, 1.0f, 0.0f), // Yellow
+    glm::vec3(0.0f, 1.0f, 1.0f), // Cyan
+    glm::vec3(1.0f, 0.0f, 1.0f), // Magenta
+    glm::vec3(1.0f, 0.5f, 0.0f), // Orange
+    glm::vec3(0.5f, 0.0f, 0.5f), // Purple
+    glm::vec3(0.0f, 0.5f, 0.5f), // Teal
+    glm::vec3(0.5f, 0.5f, 0.5f)  // Gray
+    };
+
+    for (int group = 0; group < numGroups; ++group) {
+        // Assign a unique position offset for each group to separate them
+        glm::vec3 groupOffset(
+            static_cast<float>(rand() % 200 - 100) / 10.0f,
+            static_cast<float>(rand() % 200 - 100) / 10.0f,
+            static_cast<float>(rand() % 200 - 100) / 10.0f
+        );
+
+        for (int i = 0; i < numBoidsPerGroup; ++i) {
+            glm::vec3 startPosition(
+                groupOffset.x + static_cast<float>(rand() % 200 - 100) / 10.0f * spawnRange / 10.0f,
+                groupOffset.y + static_cast<float>(rand() % 200 - 100) / 10.0f * spawnRange / 10.0f,
+                groupOffset.z + static_cast<float>(rand() % 200 - 100) / 10.0f * spawnRange / 10.0f
+            );
+
+            glm::vec3 startVelocity(
+                static_cast<float>(rand() % 10 - 5) / 10.0f,
+                static_cast<float>(rand() % 10 - 5) / 10.0f,
+                static_cast<float>(rand() % 10 - 5) / 10.0f
+            );
+
+            // Add the boid to the list
+            glm::vec3 groupColor = groupColors[group]; 
+            boids.emplace_back(startPosition, startVelocity, group, groupColor);
+        }
     }
 }

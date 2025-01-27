@@ -55,6 +55,12 @@
     <None Include="cube.vert">
       <Filter>Shadery</Filter>
     </None>
+    <None Include="fish.frag">
+      <Filter>Shadery</Filter>
+    </None>
+    <None Include="fish.vert">
+      <Filter>Shadery</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Boids.cpp">
