@@ -3,6 +3,7 @@
 
 #include <glm.hpp>
 #include <vector>
+#include "Render_Utils.h"
 
 // this file just contains the blueprint for the boids class
 class Boid {
@@ -22,6 +23,8 @@ public:
     float perceptionRadius;
 
     int groupID;
+
+    Core::RenderContext* context;
 
     // constructor
     Boid(glm::vec3 startPosition, glm::vec3 startVelocity, int groupID, glm::vec3 color);

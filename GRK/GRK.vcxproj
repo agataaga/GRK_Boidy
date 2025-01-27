@@ -24,17 +24,19 @@
     <ClInclude Include="src\Box.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\EBO.h" />
+    <ClInclude Include="src\objload.h" />
+    <ClInclude Include="src\Render_Utils.h" />
     <ClInclude Include="src\ShaderClass.h" />
+    <ClInclude Include="src\Shader_Loader.h" />
+    <ClInclude Include="src\Texture.h" />
     <ClInclude Include="src\VAO.h" />
     <ClInclude Include="src\VBO.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\shaders\shader_2_1.frag" />
-    <None Include="..\shaders\shader_2_1.vert" />
     <None Include="cube.frag" />
     <None Include="cube.vert" />
-    <None Include="fish.frag" />
-    <None Include="fish.vert" />
+    <None Include="shaders\fish_shader.frag" />
+    <None Include="shaders\fish_shader.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="include\glad.c" />
@@ -44,7 +46,9 @@
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\EBO.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Render_Utils.cpp" />
     <ClCompile Include="src\ShaderClass.cpp" />
+    <ClCompile Include="src\Shader_Loader.cpp" />
     <ClCompile Include="src\stb_image.cpp" />
     <ClCompile Include="src\VAO.cpp" />
     <ClCompile Include="src\VBO.cpp" />

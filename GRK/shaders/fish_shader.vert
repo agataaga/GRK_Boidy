@@ -7,7 +7,7 @@ layout(location = 1) in vec3 vertexNormal;
 layout(location = 2) in vec2 vertexTexCoord;
 layout(location = 3) in vec3 vertexTangent;
 
-uniform mat4 transformation;
+uniform mat4 projection;
 uniform mat4 modelMatrix;
 
 out vec2 fragTexCoord;
@@ -30,5 +30,5 @@ void main()
     fragTexCoord = vertexTexCoord;
 
     // pozycja w przestrzeni widoku (clip-space)
-    gl_Position = transformation * worldPosition;
+    gl_Position = projection * worldPosition;
 }

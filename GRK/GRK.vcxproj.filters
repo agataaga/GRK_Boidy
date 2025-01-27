@@ -41,24 +41,22 @@
     <ClInclude Include="src\ShaderClass.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
+    <ClInclude Include="src\objload.h" />
+    <ClInclude Include="src\Render_Utils.h" />
+    <ClInclude Include="src\Shader_Loader.h" />
+    <ClInclude Include="src\Texture.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\shaders\shader_2_1.frag">
-      <Filter>Shadery</Filter>
-    </None>
-    <None Include="..\shaders\shader_2_1.vert">
-      <Filter>Shadery</Filter>
-    </None>
     <None Include="cube.frag">
       <Filter>Shadery</Filter>
     </None>
     <None Include="cube.vert">
       <Filter>Shadery</Filter>
     </None>
-    <None Include="fish.frag">
+    <None Include="shaders\fish_shader.frag">
       <Filter>Shadery</Filter>
     </None>
-    <None Include="fish.vert">
+    <None Include="shaders\fish_shader.vert">
       <Filter>Shadery</Filter>
     </None>
   </ItemGroup>
@@ -94,6 +92,12 @@
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
     <ClCompile Include="src\ShaderClass.cpp">
+      <Filter>Pliki źródłowe</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Render_Utils.cpp">
+      <Filter>Pliki źródłowe</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Shader_Loader.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
   </ItemGroup>

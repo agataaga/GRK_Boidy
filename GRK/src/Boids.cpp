@@ -192,3 +192,5 @@ glm::vec3 Boid::separation(const std::vector<Boid>& boids, float desiredSeparati
 
     return steer;
 }
+
+

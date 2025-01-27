@@ -11,8 +11,8 @@ uniform vec3 lightColor;
 uniform vec3 cameraPos; 
 uniform vec3 objectColor;
 
-uniform sampler2D normalMap;
-uniform sampler2D colorTexture;
+uniform sampler2D fishNormalMap;
+uniform sampler2D fishTexture;
 
 out vec4 out_color;
 
@@ -21,10 +21,10 @@ void main()
     vec2 fragTexCoord = fragTexCoord * 10.0;
 
     // druga tekstura
-    vec4 textureColor = texture(colorTexture, fragTexCoord);
+    vec4 textureColor = texture(fishTexture, fragTexCoord);
 
     // pobranie wektora normalnego z mapy normalnych
-    vec3 normalMapValue = texture(normalMap, fragTexCoord).rgb;
+    vec3 normalMapValue = texture(fishNormalMap, fragTexCoord).rgb;
     vec3 N = normalize(TBN * (2.0 * normalMapValue - 1.0));
 
 	// normalizacja wektorów

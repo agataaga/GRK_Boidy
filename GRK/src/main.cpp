@@ -12,9 +12,17 @@
 #include "BoidSetUp.h"
 #include "Boids.h"
 #include "Box.h"
+#include <stb_image.h>
 
 const unsigned int width = 800;
 const unsigned int height = 800;
+
+Core::RenderContext fishContext;
+GLuint fishNormalMap, fishTexture;
+
+glm::vec3 lightPos = glm::vec3(10.0f, 10.0f, 10.0f);
+glm::vec3 lightColor = glm::vec3(500.0f, 500.0f, 500.0f);
+glm::vec3 objectColor = glm::vec3(0.8f, 0.3f, 0.3f);
 
 //wyzwanie dla chetnych - przeniesc te dwa gowna do box.cpp i box.h tak zeby dzialalo 
 //bo ja juz sie poddaje, wiec chwilowo niech zasmiecaja maina
@@ -72,6 +80,72 @@ void processInput(GLFWwindow* window) {
         glfwSetWindowShouldClose(window, true);
 }
 
+void loadModelToContext(std::string path, Core::RenderContext& context)
+{
+    Assimp::Importer import;
+    const aiScene * scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_CalcTangentSpace);
+
+    if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+    {
+        std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
+        return;
+    }
+
+    if (scene->mNumMeshes == 0) {
+        std::cout << "No meshes found in model" << std::endl;
+        return;
+    }
+
+    context.initFromAssimpMesh(scene->mMeshes[0]);
+    std::cout << "Model loaded successfully with " << scene->mMeshes[0]->mNumVertices << " vertices" << std::endl;
+
+
+}
+
+GLuint loadTexture(const std::string& path) {
+    GLuint textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    // Load the texture data using stb_image
+    int width, height, nrChannels;
+    unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
+    if (data) {
+        GLenum format;
+        if (nrChannels == 1) {
+            format = GL_RED;
+        }
+        else if (nrChannels == 3) {
+            format = GL_RGB;
+        }
+        else if (nrChannels == 4) {
+            format = GL_RGBA;
+        }
+        else {
+            std::cout << "Error: Unsupported number of channels in texture!" << std::endl;
+            stbi_image_free(data);
+            return 0;
+        }
+
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        // Set texture parameters
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        std::cout << "Texture loaded successfully: " << path << " (" << width << "x" << height << ", " << nrChannels << " channels)" << std::endl;
+    }
+    else {
+        std::cout << "Failed to load texture: " << path << std::endl;
+    }
+
+    stbi_image_free(data);
+    return textureID;
+}
+
 int main() {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -95,8 +169,15 @@ int main() {
 
     glEnable(GL_DEPTH_TEST);
 
+    fishNormalMap = loadTexture("../textures/fish_normal_map.png");
+    fishTexture = loadTexture("../textures/fish_texture.png");
+    if (fishNormalMap == 0 || fishTexture == 0) {
+        std::cout << "Error: Failed to load one or more textures!" << std::endl;
+        return -1;
+    }
+
     // shader for our basic wire cube
-    Shader shaderProgram("cube.vert", "cube.frag");
+    Shader shaderProgram("../shaders/cube.vert", "../shaders/cube.frag");
     VAO boxVAO;
     boxVAO.Bind();
     VBO boxVBO(boxVertices, sizeof(boxVertices));
@@ -112,7 +193,7 @@ int main() {
     boxEBO.Unbind();
     shaderProgram.Activate();
 
-    Shader fishShader("fish.vert", "fish.frag");
+    Shader fishShader("../shaders/shader_2_1.vert", "../shaders/shader_2_1.frag");
     fishShader.Activate();
 
     //set up a pyramid shaped vao, so it represents our boids
@@ -121,12 +202,17 @@ int main() {
     // matrixes for the camera
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -30.0f)); // sets how far away we are from the cube
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
     glEnable(GL_DEPTH_TEST);
     Camera camera(width, height, glm::vec3(0.0f, 0.0f, 5.0f));
     
     // !!!!!!!!!!!!!!!!!!!!!!!!!
-    std::vector<Boid> boids; 
+    std::vector<Boid> boids;
+    loadModelToContext("../resources/fish.obj", fishContext);
     setUpBoids(boids, 5, 80); // set up num of boid groups you want here : boids, num of groups, num of boids in each group
+    for (auto& boid : boids) {
+        boid.context = &fishContext;
+    }
 
     while (!glfwWindowShouldClose(window)) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -139,21 +225,51 @@ int main() {
         processInput(window);
         camera.Inputs(window);
         camera.updateMatrix(45.0f, 0.1f, 100.0f);
+
+        // Set camera position for both shaders
+        shaderProgram.Activate();
+        shaderProgram.SetVec3("cameraPos", camera.Position);
+
+        fishShader.Activate();
+
+        glm::mat4 transformation = projection * view;
+
+        // Set uniforms
+        fishShader.SetMat4("transformation", transformation);
+        fishShader.SetMat4("modelMatrix", model);
+        fishShader.SetVec3("lightPos", lightPos);
+        fishShader.SetVec3("lightColor", lightColor);
+        fishShader.SetVec3("cameraPos", camera.Position);
+        fishShader.SetVec3("objectColor", objectColor);
+        fishShader.SetInt("fishNormalMap", 0); // Texture unit 0
+        fishShader.SetInt("fishTexture", 1); // Texture unit 1
+
+        // Bind textures
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, fishNormalMap);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, fishTexture);
+
+        // Render the wireframe box
+        shaderProgram.Activate();
+        boxVAO.Bind();
+        glUniform3fv(glGetUniformLocation(shaderProgram.ID, "color"), 1, glm::value_ptr(glm::vec3(1.0f, 1.0f, 1.0f)));
+        glDrawElements(GL_LINES, sizeof(boxIndices) / sizeof(int), GL_UNSIGNED_INT, 0);
         
         glUniform3f(glGetUniformLocation(shaderProgram.ID, "cameraPos"), camera.Position.x, camera.Position.y, camera.Position.z);
-        glUniform3f(glGetUniformLocation(fishShader.ID, "cameraPos"), camera.Position.x, camera.Position.y, camera.Position.z);
+        //glUniform3f(glGetUniformLocation(fishShader.ID, "cameraPos"), camera.Position.x, camera.Position.y, camera.Position.z);
 
         shaderProgram.Activate();
-        fishShader.Activate();
-        
+        //fishShader.Activate();
+        //
         camera.Matrix(shaderProgram, "camMatrix");
-        camera.Matrix(fishShader, "camMatrix");
+        //camera.Matrix(fishShader, "camMatrix");
 
         GLuint modelLoc = glGetUniformLocation(shaderProgram.ID, "model");
-        modelLoc = glGetUniformLocation(fishShader.ID, "model");
+        //modelLoc = glGetUniformLocation(fishShader.ID, "model");
 
         GLuint viewLoc = glGetUniformLocation(shaderProgram.ID, "view");
-        viewLoc = glGetUniformLocation(fishShader.ID, "view");
+        //viewLoc = glGetUniformLocation(fishShader.ID, "view");
 
         glm::mat4 identityMatrix = glm::mat4(1.0f);
         model = glm::scale(identityMatrix, glm::vec3(100.0f, 100.0f, 100.0f));
@@ -169,6 +285,7 @@ int main() {
 
         // boid rendering and updating
         for (auto& boid : boids) {
+            fishShader.Activate();
             boid.update(boids); 
         }
         renderBoids(boids, fishShader);
