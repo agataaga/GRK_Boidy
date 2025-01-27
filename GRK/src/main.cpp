@@ -199,6 +199,8 @@ int main() {
     //set up a pyramid shaped vao, so it represents our boids
     setupPyramid();
     
+    glm::vec3 boxCenter(0.0f, 0.0f, 0.0f);
+
     // matrixes for the camera
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -30.0f)); // sets how far away we are from the cube
@@ -230,31 +232,30 @@ int main() {
         shaderProgram.Activate();
         shaderProgram.SetVec3("cameraPos", camera.Position);
 
-        fishShader.Activate();
 
-        glm::mat4 transformation = projection * view;
+        camera.Inputs(window);
+        camera.updateMatrix(45.0f, 0.1f, 100.0f);
+        camera.Matrix(fishShader, "camMatrix");
+
+        fishShader.Activate();
+        //camera.Matrix(fishShader, "camMatrix");
 
         // Set uniforms
-        fishShader.SetMat4("transformation", transformation);
+        fishShader.SetMat4("transformation", camera.cameraMatrix);
         fishShader.SetMat4("modelMatrix", model);
         fishShader.SetVec3("lightPos", lightPos);
         fishShader.SetVec3("lightColor", lightColor);
         fishShader.SetVec3("cameraPos", camera.Position);
         fishShader.SetVec3("objectColor", objectColor);
-        fishShader.SetInt("fishNormalMap", 0); // Texture unit 0
-        fishShader.SetInt("fishTexture", 1); // Texture unit 1
 
         // Bind textures
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, fishNormalMap);
+        fishShader.SetInt("fishNormalMap", 0); // Texture unit 0
+
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, fishTexture);
-
-        // Render the wireframe box
-        shaderProgram.Activate();
-        boxVAO.Bind();
-        glUniform3fv(glGetUniformLocation(shaderProgram.ID, "color"), 1, glm::value_ptr(glm::vec3(1.0f, 1.0f, 1.0f)));
-        glDrawElements(GL_LINES, sizeof(boxIndices) / sizeof(int), GL_UNSIGNED_INT, 0);
+        fishShader.SetInt("fishTexture", 1); // Texture unit 1
         
         glUniform3f(glGetUniformLocation(shaderProgram.ID, "cameraPos"), camera.Position.x, camera.Position.y, camera.Position.z);
         //glUniform3f(glGetUniformLocation(fishShader.ID, "cameraPos"), camera.Position.x, camera.Position.y, camera.Position.z);
@@ -282,11 +283,10 @@ int main() {
         glUniform3fv(glGetUniformLocation(shaderProgram.ID, "color"), 1, glm::value_ptr(glm::vec3(1.0f, 1.0f, 1.0f)));
         glDrawElements(GL_LINES, sizeof(boxIndices)/ sizeof(int), GL_UNSIGNED_INT, 0);
         
-
+        
         // boid rendering and updating
         for (auto& boid : boids) {
-            fishShader.Activate();
-            boid.update(boids); 
+            boid.update(boids);
         }
         renderBoids(boids, fishShader);
 

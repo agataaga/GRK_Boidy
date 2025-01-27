@@ -18,7 +18,7 @@ out vec4 out_color;
 
 void main()
 {
-    vec2 fragTexCoord = fragTexCoord * 10.0;
+    vec2 fragTexCoord = fragTexCoord * 2.0;
 
     // druga tekstura
     vec4 textureColor = texture(fishTexture, fragTexCoord);
@@ -51,7 +51,7 @@ void main()
 
 	// finalny kolor
     vec3 finalColor = (diffuse + specular + ambient) * attenuation * textureColor.rgb;
-    out_color = vec4(finalColor, textureColor.a);
-    //out_color = vec4(normalMapValue, 1.0);
+    //out_color = vec4(finalColor, textureColor.a);
+    out_color = vec4(normalMapValue, 1.0);
     //out_color = vec4(fragPosition, 1.0);
 }
