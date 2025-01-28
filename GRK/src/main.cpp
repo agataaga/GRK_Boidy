@@ -21,7 +21,7 @@ Core::RenderContext fishContext;
 GLuint fishNormalMap, fishTexture;
 
 glm::vec3 lightPos = glm::vec3(10.0f, 10.0f, 10.0f);
-glm::vec3 lightColor = glm::vec3(500.0f, 500.0f, 500.0f);
+glm::vec3 lightColor = glm::vec3(400.0f, 400.0f, 400.0f);
 glm::vec3 objectColor = glm::vec3(0.8f, 0.3f, 0.3f);
 
 //wyzwanie dla chetnych - przeniesc te dwa gowna do box.cpp i box.h tak zeby dzialalo 
@@ -197,27 +197,26 @@ int main() {
     fishShader.Activate();
 
     //set up a pyramid shaped vao, so it represents our boids
-    setupPyramid();
-    
-    glm::vec3 boxCenter(0.0f, 0.0f, 0.0f);
+    //setupPyramid();
 
     // matrixes for the camera
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -30.0f)); // sets how far away we are from the cube
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
     glEnable(GL_DEPTH_TEST);
-    Camera camera(width, height, glm::vec3(0.0f, 0.0f, 5.0f));
+    glDisable(GL_BLEND);
+    Camera camera(width, height, glm::vec3(0.0f, 0.0f, 10.0f));
     
     // !!!!!!!!!!!!!!!!!!!!!!!!!
     std::vector<Boid> boids;
     loadModelToContext("../resources/fish.obj", fishContext);
-    setUpBoids(boids, 5, 80); // set up num of boid groups you want here : boids, num of groups, num of boids in each group
+    setUpBoids(boids, 5, 50); // set up num of boid groups you want here : boids, num of groups, num of boids in each group
     for (auto& boid : boids) {
         boid.context = &fishContext;
     }
 
     while (!glfwWindowShouldClose(window)) {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         processInput(window);
 
         glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
@@ -228,49 +227,37 @@ int main() {
         camera.Inputs(window);
         camera.updateMatrix(45.0f, 0.1f, 100.0f);
 
-        // Set camera position for both shaders
+        bool shaderReloaded = false;
+
+        // set camera position for both shaders
         shaderProgram.Activate();
         shaderProgram.SetVec3("cameraPos", camera.Position);
 
-
         camera.Inputs(window);
         camera.updateMatrix(45.0f, 0.1f, 100.0f);
-        camera.Matrix(fishShader, "camMatrix");
 
         fishShader.Activate();
-        //camera.Matrix(fishShader, "camMatrix");
 
-        // Set uniforms
+
+
+        // set uniforms for fish shader
+        fishShader.SetInt("fishNormalMap", 0);
+        fishShader.SetInt("fishTexture", 1);
+
         fishShader.SetMat4("transformation", camera.cameraMatrix);
         fishShader.SetMat4("modelMatrix", model);
         fishShader.SetVec3("lightPos", lightPos);
         fishShader.SetVec3("lightColor", lightColor);
         fishShader.SetVec3("cameraPos", camera.Position);
         fishShader.SetVec3("objectColor", objectColor);
-
-        // Bind textures
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, fishNormalMap);
-        fishShader.SetInt("fishNormalMap", 0); // Texture unit 0
-
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, fishTexture);
-        fishShader.SetInt("fishTexture", 1); // Texture unit 1
         
+        // program shader
         glUniform3f(glGetUniformLocation(shaderProgram.ID, "cameraPos"), camera.Position.x, camera.Position.y, camera.Position.z);
-        //glUniform3f(glGetUniformLocation(fishShader.ID, "cameraPos"), camera.Position.x, camera.Position.y, camera.Position.z);
-
         shaderProgram.Activate();
-        //fishShader.Activate();
-        //
         camera.Matrix(shaderProgram, "camMatrix");
-        //camera.Matrix(fishShader, "camMatrix");
 
         GLuint modelLoc = glGetUniformLocation(shaderProgram.ID, "model");
-        //modelLoc = glGetUniformLocation(fishShader.ID, "model");
-
         GLuint viewLoc = glGetUniformLocation(shaderProgram.ID, "view");
-        //viewLoc = glGetUniformLocation(fishShader.ID, "view");
 
         glm::mat4 identityMatrix = glm::mat4(1.0f);
         model = glm::scale(identityMatrix, glm::vec3(100.0f, 100.0f, 100.0f));
@@ -286,7 +273,7 @@ int main() {
         
         // boid rendering and updating
         for (auto& boid : boids) {
-            boid.update(boids);
+            boid.update(boids);          
         }
         renderBoids(boids, fishShader);
 

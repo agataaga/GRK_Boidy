@@ -20,6 +20,7 @@ public:
 
     void Activate();
     void Delete();
+ 
 
     // Utility functions for setting uniforms
     void SetMat4(const std::string& name, const glm::mat4& mat) const;

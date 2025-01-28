@@ -16,7 +16,7 @@ out mat3 TBN;
 
 void main()
 {
-	// przekszta³cenie pozycji w przestrzeni œwiata
+	// position in world space
     vec4 worldPosition = modelMatrix * vec4(vertexPosition, 1.0);
     fragPosition = worldPosition.xyz;
 
@@ -26,9 +26,9 @@ void main()
     vec3 B = normalize(cross(N, T));
     TBN = mat3(T, B, N);
 
-    // wspó³rzêdne tekstury
+    // texture coordinates
     fragTexCoord = vertexTexCoord;
 
-    // pozycja w przestrzeni widoku (clip-space)
-    gl_Position = transformation * worldPosition;
+    // position (clip-space)
+    gl_Position = transformation * modelMatrix * worldPosition;
 }

@@ -63,7 +63,7 @@ void renderBoids(std::vector<Boid>& boids, Shader& shaderProgram) {
 
         model = glm::translate(model, boid.position);
         model = glm::rotate(model, glm::radians(boid.angle), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.03f));
+        model = glm::scale(model, glm::vec3(0.05f));
 
         shaderProgram.Activate();
         shaderProgram.SetMat4("modelMatrix", model);
@@ -71,15 +71,9 @@ void renderBoids(std::vector<Boid>& boids, Shader& shaderProgram) {
         shaderProgram.Activate();
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
-        // Pass the group color to the shader
-        //glUniform3fv(glGetUniformLocation(shaderProgram.ID, "groupColor"), 1, glm::value_ptr(boid.color));
-
         if (boid.context) {
             Core::DrawContext(*boid.context);
         }
-
-        /*glBindVertexArray(pVAO);
-        glDrawElements(GL_TRIANGLES, sizeof(pyramidIndices) / sizeof(int), GL_UNSIGNED_INT, 0);*/
     }
 }
 

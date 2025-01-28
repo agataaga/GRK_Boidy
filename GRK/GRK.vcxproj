@@ -48,7 +48,6 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Render_Utils.cpp" />
     <ClCompile Include="src\ShaderClass.cpp" />
-    <ClCompile Include="src\Shader_Loader.cpp" />
     <ClCompile Include="src\stb_image.cpp" />
     <ClCompile Include="src\VAO.cpp" />
     <ClCompile Include="src\VBO.cpp" />
